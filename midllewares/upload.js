@@ -1,34 +1,10 @@
-<<<<<<< HEAD
 // middleware/upload.js
 import multer from "multer";
 
-const storage = multer.diskStorage({
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only image files allowed"), false);
-  }
-};
-
-const upload = multer({
-  storage,
-  fileFilter,
-});
-
-export default upload;
-=======
-import multer from "multer";
-
-// store file in memory (RAM)
+// Store file in memory (best for Cloudinary)
 const storage = multer.memoryStorage();
 
-// allow only images
+// Allow only image files
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
@@ -37,11 +13,12 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-export const upload = multer({
+const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 5 * 1024 * 1024, // 5MB limit
   },
 });
->>>>>>> 908465d (mmm)
+
+export default upload;

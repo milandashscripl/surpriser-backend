@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-// controllers/authController.js
-=======
->>>>>>> 908465d (mmm)
 import bcrypt from "bcryptjs";
 import User from "../models";
 import generateToken from "../utils/jwt.js";

@@ -20,10 +20,11 @@ export const updateProfile = async (req, res) => {
     const { name } = req.body;
     let profilePic = req.user.profilePic;
 
-    if (req.body.profilePic) {
-      const uploadRes = await uploadToCloudinary(req.body.profilePic);
-      profilePic = uploadRes.secure_url;
-    }
+    if (req.file) {
+  const uploadRes = await uploadToCloudinary(req.file.path);
+  profilePic = uploadRes.secure_url;
+}
+
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
