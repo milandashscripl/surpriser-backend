@@ -2,52 +2,29 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    fullName: { type: String, required: true },
+    email: { type: String, unique: true, sparse: true },
+    phone: { type: String, unique: true, sparse: true },
+    password: { type: String, required: true },
 
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
+    aadhar: { type: String, required: true },
 
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-      select: false,
+    address: {
+      text: String,
+      location: {
+        lat: Number,
+        lng: Number,
+      },
     },
 
     profilePic: {
-<<<<<<< HEAD
-      url: {
-        type: String,
-        default: "",
-      },
-      public_id: {
-        type: String,
-        default: "",
-      },
-=======
-      type: String, // Cloudinary URL
-      default: "",
+      url: String,
+      public_id: String,
     },
 
-    isVerified: {
-      type: Boolean,
-      default: false,
->>>>>>> 908465d (mmm)
-    },
+    isVerified: { type: Boolean, default: false },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export default mongoose.model("User", userSchema);

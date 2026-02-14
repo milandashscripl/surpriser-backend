@@ -1,94 +1,103 @@
 import bcrypt from "bcryptjs";
-import User from "../models";
+import User from "../models/User.js";
 import generateToken from "../utils/jwt.js";
-
+import { getDevOtp } from "../utils/otp.js";
 import cloudinary from "../config/cloudinary.js";
 
 // REGISTER
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const {
+      fullName,
+      email,
+      phone,
+      password,
+      aadhar,
+      addressText,
+      lat,
+      lng,
+      otp,
+    } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!fullName || !password || !aadhar) {
+      return res.status(400).json({ message: "Required fields missing" });
     }
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "Email already registered" });
+    // OTP check (DEV MODE)
+    if (otp !== getDevOtp()) {
+      return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    let profilePic = { url: "", public_id: "" };
+    const exists = await User.findOne({
+      $or: [{ email }, { phone }],
+    });
 
+    if (exists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    let profilePic = {};
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
+      const upload = await cloudinary.uploader.upload(req.file.path, {
         folder: "users",
       });
 
       profilePic = {
-        url: result.secure_url,
-        public_id: result.public_id,
+        url: upload.secure_url,
+        public_id: upload.public_id,
       };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
+      fullName,
       email,
+      phone,
       password: hashedPassword,
+      aadhar,
+      address: {
+        text: addressText,
+        location: { lat, lng },
+      },
       profilePic,
+      isVerified: true,
     });
 
     res.status(201).json({
       message: "Registration successful",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        profilePic: user.profilePic.url,
-      },
       token: generateToken(user._id),
+      user,
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// mvvmvm
-// ===============================
-// LOGIN
-// ===============================
+
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { emailOrPhone, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+    const user = await User.findOne({
+      $or: [{ email: emailOrPhone }, { phone: emailOrPhone }],
+    });
 
-    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     res.json({
       message: "Login successful",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-      },
       token: generateToken(user._id),
+      user,
     });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

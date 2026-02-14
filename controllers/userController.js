@@ -1,39 +1,22 @@
 import User from "../models/User.js";
-import { uploadToCloudinary } from "../utils/cloudinarUpload.js";
 
-/**
- * GET PROFILE mmmmmmmmmm
- */
+// READ
 export const getProfile = async (req, res) => {
-  try {
-    res.json(req.user);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json(req.user);
 };
 
-/**
- * UPDATE PROFILE
- */
+// UPDATE
 export const updateProfile = async (req, res) => {
-  try {
-    const { name } = req.body;
-    let profilePic = req.user.profilePic;
+  const updated = await User.findByIdAndUpdate(
+    req.user._id,
+    req.body,
+    { new: true }
+  );
+  res.json(updated);
+};
 
-    if (req.file) {
-  const uploadRes = await uploadToCloudinary(req.file.path);
-  profilePic = uploadRes.secure_url;
-}
-
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { name, profilePic },
-      { new: true }
-    ).select("-password");
-
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ message: "Profile update failed" });
-  }
+// DELETE
+export const deleteUser = async (req, res) => {
+  await User.findByIdAndDelete(req.user._id);
+  res.json({ message: "Account deleted" });
 };
